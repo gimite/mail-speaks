@@ -83,7 +83,7 @@ public class StatusActivity extends Activity {
 		public void run() {
 			handler.post(new Runnable() {
 				public void run() {
-					outputLabel.setText(mailChecker.lastCheckTime());
+					outputLabel.setText(mailChecker.getStatus());
 				}
 			});
 		}
