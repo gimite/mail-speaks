@@ -11,19 +11,20 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 
 public class StatusActivity extends Activity {
 
-    private Button startButton;
-    private Button stopButton;
     private Handler handler = new Handler();
-    private TextView globalStatusLabel;
     private MailChecker mailChecker;
     private Timer timer;
+    private CheckBox notifyBox;
+    private TextView globalStatusLabel;
     private ListView accountsView;
     private ArrayList<HashMap<String, String>> accountsData =
         new ArrayList<HashMap<String, String>>();
@@ -37,10 +38,8 @@ public class StatusActivity extends Activity {
         mailChecker = new MailChecker(this);
 
         globalStatusLabel = (TextView)findViewById(R.id.globalStatusLabel);
-        startButton = (Button)findViewById(R.id.startButton);
-        startButton.setOnClickListener(onStartButtonClick);
-        stopButton = (Button)findViewById(R.id.stopButton);
-        stopButton.setOnClickListener(onStopButtonClick);
+        notifyBox = (CheckBox)findViewById(R.id.notifyBox);
+        notifyBox.setOnCheckedChangeListener(onNotifyBoxClick);
         accountsView = (ListView)findViewById(R.id.accountsView);
         accountsAdapter = new SimpleAdapter(
                 this,
@@ -83,17 +82,15 @@ public class StatusActivity extends Activity {
         stopService(i);
     }
     
-    private OnClickListener onStartButtonClick = new OnClickListener() {
+    private OnCheckedChangeListener onNotifyBoxClick = new OnCheckedChangeListener() {
         @Override
-        public void onClick(View arg0) {
-            startService();
-        }
-    };
-    
-    private OnClickListener onStopButtonClick = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            stopService();
+        public void onCheckedChanged(CompoundButton buttonView,
+                boolean isChecked) {
+            if (isChecked) {
+                startService();
+            } else {
+                stopService();
+            }
         }
     };
     
