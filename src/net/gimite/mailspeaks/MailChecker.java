@@ -66,23 +66,23 @@ public class MailChecker {
 			accountRow = db.rawQuery("select * from accounts", new String[]{ });
 			String status = "";
 			while (accountRow.moveToNext()) {
-				Date lastCheckAt = getDate(accountRow, "last_check_at");
-				Date lastSuccessAt = getDate(accountRow, "last_success_at");
+				Date lastCheckAt = Util.getDate(accountRow, "last_check_at");
+				Date lastSuccessAt = Util.getDate(accountRow, "last_success_at");
 				String timeStatus = "";
 				if (lastSuccessAt.equals(lastCheckAt)) {
 					timeStatus = String.format(
 						"Last check succeeded at %s.",
-						dateToString(lastCheckAt));
+						Util.dateToString(lastCheckAt));
 				} else {
 					timeStatus = String.format(
 						"Last check failed at %s. Last successful check was at %s.",
-						dateToString(lastCheckAt),
-						dateToString(lastSuccessAt));
+						Util.dateToString(lastCheckAt),
+						Util.dateToString(lastSuccessAt));
 				}
 				status += String.format("%s:\n%s\n%s.\n\n",
-						getString(accountRow, "email"),
+				        Util.getString(accountRow, "email"),
 						timeStatus,
-						getString(accountRow, "last_result"));
+						Util.getString(accountRow, "last_result"));
 			}
 			return status;
 		} finally {
@@ -92,10 +92,10 @@ public class MailChecker {
 	
     @SuppressWarnings("unchecked")
 	public boolean checkMails(Cursor accountRow) {
-		int accountId = getInt(accountRow, "id");
+		int accountId = Util.getInt(accountRow, "id");
     	String storeUrl = getStoreUrl(accountRow, false);
-		long lastUid = getLong(accountRow, "last_uid");
-		String email = getString(accountRow, "email");
+		long lastUid = Util.getLong(accountRow, "last_uid");
+		String email = Util.getString(accountRow, "email");
 		Cursor folderRow = db.rawQuery("select * from folders where account_id = ?",
 				new String[]{ Integer.toString(accountId) });
 		boolean succeed = true;
@@ -107,7 +107,7 @@ public class MailChecker {
 	//		    Log.i("MailChecker", "Folder: " + f.getName());
 	//	    }
 			while (folderRow.moveToNext()) {
-				String folderName = getString(folderRow, "name");
+				String folderName = Util.getString(folderRow, "name");
 				setStatus(accountRow, String.format("Opening folder %s ...", folderName));
 				Folder folder = store.getFolder(folderName);
 				Log.i("MailChecker", "got folder");
@@ -195,20 +195,20 @@ public class MailChecker {
     
 	private void setStatus(Cursor accountRow, String status) {
 		Log.i("MailChecker", String.format("%s: %s",
-				getString(accountRow, "email"), status));
+		        Util.getString(accountRow, "email"), status));
 		db.execSQL("update accounts set last_result = ? where id = ?",
-				new Object[]{ status, getInt(accountRow, "id") });
+				new Object[]{ status, Util.getInt(accountRow, "id") });
 	}
 	
 	private String getStoreUrl(Cursor accountRow, boolean forLog) {
 		try {
 			return String.format("%s://%s:%s@%s:%d",
-					getString(accountRow, "protocol"),
-					URLEncoder.encode(getString(accountRow, "user"), "UTF-8"),
+			        Util.getString(accountRow, "protocol"),
+					URLEncoder.encode(Util.getString(accountRow, "user"), "UTF-8"),
 					forLog ? "****" :
-						URLEncoder.encode(getString(accountRow, "password"), "UTF-8"),
-					getString(accountRow, "host"),
-					getInt(accountRow, "port"));
+						URLEncoder.encode(Util.getString(accountRow, "password"), "UTF-8"),
+					Util.getString(accountRow, "host"),
+					Util.getInt(accountRow, "port"));
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
@@ -261,33 +261,6 @@ public class MailChecker {
     		"  name string" +
     		")"
     	);
-    }
-    
-	private int getInt(Cursor cursor, String columnName) {
-		int idx = cursor.getColumnIndexOrThrow(columnName);
-		return cursor.getInt(idx);
-	}
-	
-	private long getLong(Cursor cursor, String columnName) {
-		int idx = cursor.getColumnIndexOrThrow(columnName);
-		return cursor.getLong(idx);
-	}
-	
-	private String getString(Cursor cursor, String columnName) {
-		int idx = cursor.getColumnIndexOrThrow(columnName);
-		return cursor.getString(idx);
-	}
-	
-	private Date getDate(Cursor cursor, String columnName) {
-		int idx = cursor.getColumnIndexOrThrow(columnName);
-		Date date = new Date();
-		date.setTime(cursor.getLong(idx));
-		return date;
-	}
-	
-    private String dateToString(Date date) {
-        DateFormat format = DateFormat.getDateTimeInstance();
-        return format.format(date);
     }
     
 }
