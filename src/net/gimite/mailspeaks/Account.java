@@ -2,7 +2,9 @@ package net.gimite.mailspeaks;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Vector;
 
 import com.android.email.mail.Address;
@@ -61,6 +63,16 @@ public class Account {
         }
     }
     
+    public static void getStatus(SQLiteDatabase db, ArrayList<HashMap<String, String>> data) {
+        data.clear();
+        for (Account account : getAll(db)) {
+            HashMap<String, String> entry = new HashMap<String, String>();
+            entry.put("email", account.email());
+            entry.put("status", account.getStatus());
+            data.add(entry);
+        }
+    }
+    
     public Account(SQLiteDatabase db, Cursor cursor) {
         this.db = db;
         id = Util.getInt(cursor, "id");
@@ -75,6 +87,8 @@ public class Account {
         lastSuccessAt = Util.getDate(cursor, "last_success_at");
         lastResult = Util.getString(cursor, "last_result");
     }
+    
+    public String email() { return email; }
 
     @SuppressWarnings("unchecked")
     public String checkMails() {
@@ -204,6 +218,21 @@ public class Account {
         Log.i("MailChecker", String.format("%s: %s", email, status));
         db.execSQL("update accounts set last_result = ? where id = ?",
                 new Object[]{ status, id });
+    }
+    
+    public String getStatus() {
+        String timeStatus = "";
+        if (lastSuccessAt.equals(lastCheckAt)) {
+            timeStatus = String.format(
+                "Last check succeeded at %s.",
+                Util.dateToString(lastCheckAt));
+        } else {
+            timeStatus = String.format(
+                "Last check failed at %s. Last successful check was at %s.",
+                Util.dateToString(lastCheckAt),
+                Util.dateToString(lastSuccessAt));
+        }
+        return String.format("%s\n%s.", timeStatus, lastResult);
     }
     
     private String getFromName(Message m) throws MessagingException {

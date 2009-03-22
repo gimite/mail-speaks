@@ -1,5 +1,7 @@
 package net.gimite.mailspeaks;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -10,6 +12,8 @@ import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 public class StatusActivity extends Activity {
@@ -17,21 +21,35 @@ public class StatusActivity extends Activity {
     private Button startButton;
     private Button stopButton;
     private Handler handler = new Handler();
-    private TextView outputLabel;
+    private TextView globalStatusLabel;
     private MailChecker mailChecker;
     private Timer timer;
+    private ListView accountsView;
+    private ArrayList<HashMap<String, String>> accountsData =
+        new ArrayList<HashMap<String, String>>();
+    private SimpleAdapter accountsAdapter;
     
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.status);
-        outputLabel = (TextView)findViewById(R.id.outputLabel);
+        mailChecker = new MailChecker(this);
+
+        globalStatusLabel = (TextView)findViewById(R.id.globalStatusLabel);
         startButton = (Button)findViewById(R.id.startButton);
         startButton.setOnClickListener(onStartButtonClick);
         stopButton = (Button)findViewById(R.id.stopButton);
         stopButton.setOnClickListener(onStopButtonClick);
-        mailChecker = new MailChecker(this);
+        accountsView = (ListView)findViewById(R.id.accountsView);
+        accountsAdapter = new SimpleAdapter(
+                this,
+                accountsData,
+                android.R.layout.simple_list_item_2,
+                new String[] { "email", "status" },
+                new int[] { android.R.id.text1, android.R.id.text2 }
+                );
+        accountsView.setAdapter(accountsAdapter);
     }
 
     @Override
@@ -83,7 +101,9 @@ public class StatusActivity extends Activity {
         public void run() {
             handler.post(new Runnable() {
                 public void run() {
-                    outputLabel.setText(mailChecker.getStatus());
+                    globalStatusLabel.setText(mailChecker.getGlobalStatus());
+                    mailChecker.getAccountsStatus(accountsData);
+                    accountsAdapter.notifyDataSetChanged();
                 }
             });
         }

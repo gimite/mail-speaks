@@ -48,29 +48,29 @@ public class MailCheckerService extends Service {
 
     @Override
     public void onStart(Intent intent, int startId) {
-        log(String.format("started: %s", intent.getAction()));
+        String action = intent.getAction();
+        log(String.format("started: %s", action));
         super.onStart(intent, startId);
-        log("2");
-        if (ACTION_CHECK_MAIL.equals(intent.getAction())) {
-            log("3");
+        if (ACTION_CHECK_MAIL.equals(action)) {
+            mailChecker.setGlobalStatus("Start checking...");
             plock.acquire();
-            log("4");
             if (thread != null && thread.isAlive()) thread.interrupt();
-            log("5");
             thread = new Thread(new Runnable() {
                 public void run() {
                     log("thread started");
                     try{
-                        for (int i = 0; i < 12; ++i) {
+                        for (int i = 0; i < 6; ++i) {
                             try {
                                 Thread.sleep(10 * 1000);
-                                log(String.format("%dth try", i + 1));
+                                mailChecker.setGlobalStatus(
+                                        String.format("Attempt %d: Checking...", i + 1));
                                 log(wifiStatus());
                                 if (mailChecker.checkMails()) {
-                                    log("success");
+                                    mailChecker.setGlobalStatus("Last check succeeded.");
                                     break;
                                 } else {
-                                    log("failed");
+                                    mailChecker.setGlobalStatus(
+                                            "Check of one or more accounts failed.");
                                 }
                             } catch (InterruptedException e) {
                                 log("interrupted exception");
@@ -80,13 +80,17 @@ public class MailCheckerService extends Service {
                                 //tts.speak("Error. " + e.getMessage(), 1, null);
                                 log(String.format("error: %s (%s)",
                                         e.getClass().toString(), e.getMessage()));
+                                mailChecker.setGlobalStatus(String.format(
+                                    "Check of one or more accounts failed (%s).",
+                                    e.getMessage()));
                             }
                             if (Thread.interrupted()) {
                                 log("interrupted");
                                 break;
                             }
                             if (!inWifiArea()) {
-                                log("probably out of wifi area");
+                                mailChecker.setGlobalStatus(
+                                        "Giving up. Network is not available.");
                                 break;
                             }
                         }
@@ -97,7 +101,7 @@ public class MailCheckerService extends Service {
             });
             thread.start();
         } else {
-            setTimer(1000);
+            setTimer(0);
         }
     }
     

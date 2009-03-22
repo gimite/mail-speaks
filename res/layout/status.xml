@@ -6,6 +6,7 @@
     >
 
 <Button android:layout_height="wrap_content" android:layout_width="fill_parent" android:id="@+id/startButton" android:text="Start"></Button>
-<Button android:layout_height="wrap_content" android:layout_width="fill_parent" android:text="Stop" android:id="@+id/stopButton"></Button><TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:id="@+id/outputLabel"/>
+<Button android:layout_height="wrap_content" android:layout_width="fill_parent" android:text="Stop" android:id="@+id/stopButton"></Button><TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:id="@+id/globalStatusLabel"/><ListView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/accountsView"></ListView>
+
 
 </LinearLayout>

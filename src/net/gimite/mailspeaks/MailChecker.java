@@ -1,11 +1,14 @@
 package net.gimite.mailspeaks;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.android.email.mail.internet.BinaryTempFileBody;
 import com.google.tts.TTS;
@@ -51,34 +54,23 @@ public class MailChecker {
         }
     }
     
-    public String getStatus() {
-        Cursor accountRow = null;
+    public void getAccountsStatus(ArrayList<HashMap<String, String>> data) {
+        Account.getStatus(db, data);
+    }
+    
+    public String getGlobalStatus() {
+        Cursor cursor = db.rawQuery("select * from global", new String[]{ });
         try {
-            accountRow = db.rawQuery("select * from accounts", new String[]{ });
-            String status = "";
-            while (accountRow.moveToNext()) {
-                Date lastCheckAt = Util.getDate(accountRow, "last_check_at");
-                Date lastSuccessAt = Util.getDate(accountRow, "last_success_at");
-                String timeStatus = "";
-                if (lastSuccessAt.equals(lastCheckAt)) {
-                    timeStatus = String.format(
-                        "Last check succeeded at %s.",
-                        Util.dateToString(lastCheckAt));
-                } else {
-                    timeStatus = String.format(
-                        "Last check failed at %s. Last successful check was at %s.",
-                        Util.dateToString(lastCheckAt),
-                        Util.dateToString(lastSuccessAt));
-                }
-                status += String.format("%s:\n%s\n%s.\n\n",
-                        Util.getString(accountRow, "email"),
-                        timeStatus,
-                        Util.getString(accountRow, "last_result"));
-            }
-            return status;
+            cursor.moveToFirst();
+            return Util.getString(cursor, "status");
         } finally {
-            if (accountRow != null) accountRow.close();
+            cursor.close();
         }
+    }
+    
+    public void setGlobalStatus(String status) {
+        Log.i("MailChecker", String.format("global: %s", status));
+        db.execSQL("update global set status = ?", new Object[]{ status });
     }
     
     public void destroy() {
@@ -87,28 +79,47 @@ public class MailChecker {
     
     private void initDatabase() {
         db = context.openOrCreateDatabase("main", Context.MODE_PRIVATE, null);
-        db.execSQL(
-            "create table if not exists accounts (" +
-            "  id integer primary key autoincrement," +
-            "  protocol string," +
-            "  user string," +
-            "  password string," +
-            "  host string," +
-            "  port integer," +
-            "  email string," +
-            "  last_uid integer," +
-            "  last_check_at integer," +
-            "  last_success_at integer," +
-            "  last_result string" +
-            ")"
-        );
-        db.execSQL(
-            "create table if not exists folders (" +
-            "  id integer primary key autoincrement," +
-            "  account_id integer," +
-            "  name string" +
-            ")"
-        );
+        db.execSQL("begin immediate transaction");
+        try {
+            db.execSQL(
+                "create table if not exists global (" +
+                "  status string" +
+                ")"
+            );
+            Cursor cursor = db.rawQuery("select * from global", new String[]{ });
+            try {
+                if (cursor.getCount() == 0) {
+                    db.execSQL("insert into global default values");
+                }
+            } finally {
+                cursor.close();
+            }
+            db.execSQL(
+                "create table if not exists accounts (" +
+                "  id integer primary key autoincrement," +
+                "  protocol string," +
+                "  user string," +
+                "  password string," +
+                "  host string," +
+                "  port integer," +
+                "  email string," +
+                "  last_uid integer," +
+                "  last_check_at integer," +
+                "  last_success_at integer," +
+                "  last_result string" +
+                ")"
+            );
+            db.execSQL(
+                "create table if not exists folders (" +
+                "  id integer primary key autoincrement," +
+                "  account_id integer," +
+                "  name string" +
+                ")"
+            );
+            db.execSQL("end transaction");
+        } catch (RuntimeException ex) {
+            db.execSQL("rollback transaction");
+        }
     }
     
 }
