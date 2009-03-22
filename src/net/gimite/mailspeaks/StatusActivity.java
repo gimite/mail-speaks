@@ -14,13 +14,13 @@ import android.widget.TextView;
 
 public class StatusActivity extends Activity {
 
-	private Button startButton;
-	private Button stopButton;
-	private Handler handler = new Handler();
-	private TextView outputLabel;
-	private MailChecker mailChecker;
-	private Timer timer;
-	
+    private Button startButton;
+    private Button stopButton;
+    private Handler handler = new Handler();
+    private TextView outputLabel;
+    private MailChecker mailChecker;
+    private Timer timer;
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -36,57 +36,57 @@ public class StatusActivity extends Activity {
 
     @Override
     protected void onResume() {
-    	super.onResume();
+        super.onResume();
         timer = new Timer();
         timer.schedule(new UpdateTask(), 0, 1000);
     }
     
-	@Override
+    @Override
     protected void onPause() {
-    	super.onPause();
-    	timer.cancel();
+        super.onPause();
+        timer.cancel();
     }
     
     @Override
-	protected void onDestroy() {
-		super.onDestroy();
-		mailChecker.destroy();
-	}
+    protected void onDestroy() {
+        super.onDestroy();
+        mailChecker.destroy();
+    }
 
     private void startService() {
-    	Intent i = new Intent();
-    	i.setClass(this, MailCheckerService.class);
-    	startService(i);
+        Intent i = new Intent();
+        i.setClass(this, MailCheckerService.class);
+        startService(i);
     }
     
     private void stopService() {
-    	Intent i = new Intent();
-    	i.setClass(this, MailCheckerService.class);
-    	stopService(i);
+        Intent i = new Intent();
+        i.setClass(this, MailCheckerService.class);
+        stopService(i);
     }
     
-	private OnClickListener onStartButtonClick = new OnClickListener() {
-		@Override
-		public void onClick(View arg0) {
-			startService();
-		}
-	};
-	
-	private OnClickListener onStopButtonClick = new OnClickListener() {
-		@Override
-		public void onClick(View v) {
-			stopService();
-		}
-	};
-	
-	private class UpdateTask extends TimerTask {
-		public void run() {
-			handler.post(new Runnable() {
-				public void run() {
-					outputLabel.setText(mailChecker.getStatus());
-				}
-			});
-		}
-	};
+    private OnClickListener onStartButtonClick = new OnClickListener() {
+        @Override
+        public void onClick(View arg0) {
+            startService();
+        }
+    };
+    
+    private OnClickListener onStopButtonClick = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            stopService();
+        }
+    };
+    
+    private class UpdateTask extends TimerTask {
+        public void run() {
+            handler.post(new Runnable() {
+                public void run() {
+                    outputLabel.setText(mailChecker.getStatus());
+                }
+            });
+        }
+    };
 
 }
