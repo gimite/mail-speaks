@@ -121,13 +121,27 @@ public class Account {
                 "insert into accounts (protocol, user, password, host, port, email) " +
                 "values (?, ?, ?, ?, ?, ?)",
                 new Object[]{ protocol, user, password, host, port, email});
+            // I don't know the right way to do this.
+            Cursor cursor = db.rawQuery("select max(id) from accounts", new String[]{ });
+            try {
+                cursor.moveToFirst();
+                id = cursor.getInt(0);
+            } finally {
+                cursor.close();
+            }
         }
+    }
+    
+    public void delete() {
+        if (id == 0) throw new RuntimeException("Cannot delete unsaved account");
+        db.execSQL("delete from folders where account_id = ?", new Object[]{ id });
+        db.execSQL("delete from accounts where id = ?", new Object[]{ id });
     }
     
     public String email() { return email; }
     public int id() { return id; }
     
-    public Vector<String> allFolders() throws MessagingException {
+    public Vector<String> allFolderNames() throws MessagingException {
         ImapStore store = getStore();
         Vector<String> result = new Vector<String>();
         for (Folder folder : store.getPersonalNamespaces()){
@@ -243,7 +257,7 @@ public class Account {
     }
     
     public Vector<String> folderNames() {
-        if (folderNames == null) {
+        if (folderNames == null && id != 0) {
             Cursor cursor = db.rawQuery(
                     "select * from folders where account_id = ?",
                     new String[]{ Integer.toString(id) });

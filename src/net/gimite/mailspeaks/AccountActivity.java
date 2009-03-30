@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -21,6 +23,7 @@ import android.widget.TextView;
 public class AccountActivity extends Activity {
 
     static final int REQUEST_FOLDERS = 0;
+    static final int MENU_ITEM_DELETE = Menu.FIRST;
     
     private Handler handler = new Handler();
     private MailChecker mailChecker;
@@ -55,6 +58,10 @@ public class AccountActivity extends Activity {
         hostEdit.setText(account.host);
         portEdit.setText(Integer.toString(account.port));
         folderNames = account.folderNames();
+        if (folderNames == null) {
+            folderNames = new Vector<String>();
+            folderNames.add("INBOX");
+        }
     }
 
     private OnClickListener onFoldersButtonClick = new OnClickListener() {
@@ -64,7 +71,7 @@ public class AccountActivity extends Activity {
                 public void run() {
                     try {
                         final String[] candidates =
-                            account.allFolders().toArray(new String[0]);
+                            account.allFolderNames().toArray(new String[0]);
                         final boolean[] checked = new boolean[candidates.length];
                         for (int i = 0; i < candidates.length; ++i) {
                             checked[i] = folderNames.contains(candidates[i]);
@@ -101,19 +108,41 @@ public class AccountActivity extends Activity {
     }
     
     @Override
-    protected void onDestroy() {
-        account.email = emailEdit.getText().toString();
-        account.user = userEdit.getText().toString();
-        account.password = passwordEdit.getText().toString();
-        account.host = hostEdit.getText().toString();
-        try {
-            account.port = Integer.parseInt(portEdit.getText().toString());
-        } catch (NumberFormatException ex) {
-            account.port = 993;
+    public boolean onCreateOptionsMenu(Menu menu) {
+        boolean result = super.onCreateOptionsMenu(menu);
+        menu.add(0, MENU_ITEM_DELETE, 0, "Delete account");
+        return result;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case MENU_ITEM_DELETE:
+                if (account.id() != 0) account.delete();
+                account = null;
+                setResult(RESULT_CANCELED);
+                finish();
+                return true;
         }
-        account.save();
-        if (!folderNames.equals(account.folderNames())) {
-            account.setFolderNames(folderNames);
+        return super.onOptionsItemSelected(item);
+    }
+    
+    @Override
+    protected void onDestroy() {
+        if (account != null) {
+            account.email = emailEdit.getText().toString();
+            account.user = userEdit.getText().toString();
+            account.password = passwordEdit.getText().toString();
+            account.host = hostEdit.getText().toString();
+            try {
+                account.port = Integer.parseInt(portEdit.getText().toString());
+            } catch (NumberFormatException ex) {
+                account.port = 993;
+            }
+            account.save();
+            if (!folderNames.equals(account.folderNames())) {
+                account.setFolderNames(folderNames);
+            }
         }
         super.onDestroy();
         mailChecker.destroy();
