@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TableLayout android:id="@+id/TableLayout01" android:layout_height="wrap_content" android:layout_width="fill_parent">
+    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
+        <TextView android:text="E-mail address" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+        <EditText android:id="@+id/emailEdit" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
+    </TableRow>
+    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
+        <TextView android:text="" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+        <Button android:id="@+id/foldersButton" android:text="Choose folders" android:layout_height="wrap_content" android:layout_width="fill_parent" />
+    </TableRow>
+    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
+        <TextView android:text="User ID" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+        <EditText android:id="@+id/userEdit" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
+    </TableRow>
+    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
+        <TextView android:text="Password" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+        <EditText android:id="@+id/passwordEdit" android:password="true" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
+    </TableRow>
+    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
+        <TextView android:text="IMAP Server" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+        <EditText android:id="@+id/hostEdit" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
+    </TableRow>
+    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
+        <TextView android:text="IMAP Port" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+        <EditText android:id="@+id/portEdit" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
+    </TableRow>
+</TableLayout>
+</ScrollView>

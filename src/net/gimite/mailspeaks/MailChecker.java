@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Vector;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -18,12 +19,13 @@ public class MailChecker {
     private TTS tts;
     private Context context;
     private SQLiteDatabase db;
+    private static String tempDirPath = "/sdcard/net/gimite/tmp";
     
     final int MAX_NOTIFICATIONS = 3;
     
     public MailChecker(Context context) {
         this.context = context;
-        BinaryTempFileBody.setTempDirectory(new File("/sdcard/net/gimite/tmp"));
+        BinaryTempFileBody.setTempDirectory(new File(tempDirPath));
         tts = new TTS(context, onTtsInit, true);
         initDatabase();
     }
@@ -37,6 +39,7 @@ public class MailChecker {
         String speech = "";
         try {
             boolean success = true;
+            cleanUpTempDirectory();
             for (Account account : Account.getAll(db)) {
                 String result = account.checkMails();
                 if (result != null) {
@@ -52,6 +55,27 @@ public class MailChecker {
                 tts.speak(speech, 1, null);
             }
         }
+    }
+    
+    private void cleanUpTempDirectory() {
+        Log.i("MailChecker", "cleanUpTempDirectory");
+        File dir = new File(tempDirPath);
+        dir.mkdirs();
+        for (File file : dir.listFiles()) {
+            file.delete();
+        }
+    }
+    
+    public Vector<Account> accounts() {
+        return Account.getAll(db);
+    }
+    
+    public Account getAccount(int id) {
+        return Account.get(db, id);
+    }
+    
+    public Account newAccount() {
+        return new Account(db);
     }
     
     public void getAccountsStatus(ArrayList<HashMap<String, String>> data) {
@@ -75,6 +99,7 @@ public class MailChecker {
     
     public void destroy() {
         tts.shutdown();
+        db.close();
     }
     
     private void initDatabase() {

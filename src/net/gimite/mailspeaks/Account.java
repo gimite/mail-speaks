@@ -37,12 +37,12 @@ public class Account {
     static final boolean FOURCE_SPEAK = false;
     
     private int id;
-    private String protocol;
-    private String user;
-    private String password;
-    private String host;
-    private int port;
-    private String email;
+    public String protocol;
+    public String user;
+    public String password;
+    public String host;
+    public int port;
+    public String email;
     private long lastUid;
     private Date lastCheckAt;
     private Date lastSuccessAt;
@@ -58,6 +58,17 @@ public class Account {
                 accounts.add(new Account(db, cursor));
             }
             return accounts;
+        } finally {
+            cursor.close();
+        }
+    }
+    
+    public static Account get(SQLiteDatabase db, int id) {
+        Cursor cursor = db.rawQuery("select * from accounts where id = ?",
+                new String[]{ Integer.toString(id) });
+        try {
+            cursor.moveToFirst();
+            return new Account(db, cursor);
         } finally {
             cursor.close();
         }
@@ -88,7 +99,42 @@ public class Account {
         lastResult = Util.getString(cursor, "last_result");
     }
     
+    public Account(SQLiteDatabase db) {
+        this.db = db;
+        id = 0;
+        protocol = "imap+ssl";
+        user = "";
+        password = "";
+        host = "imap.gmail.com";
+        port = 993;
+        email = "";
+    }
+    
+    public void save() {
+        if (id != 0) {
+            db.execSQL(
+                "update accounts set protocol = ?, user = ?, password = ?, " +
+                "host = ?, port = ?, email = ? where id = ?",
+                new Object[]{ protocol, user, password, host, port, email, id});
+        } else {
+            db.execSQL(
+                "insert into accounts (protocol, user, password, host, port, email) " +
+                "values (?, ?, ?, ?, ?, ?)",
+                new Object[]{ protocol, user, password, host, port, email});
+        }
+    }
+    
     public String email() { return email; }
+    public int id() { return id; }
+    
+    public Vector<String> allFolders() throws MessagingException {
+        ImapStore store = getStore();
+        Vector<String> result = new Vector<String>();
+        for (Folder folder : store.getPersonalNamespaces()){
+            result.add(folder.getName());
+        }
+        return result;
+    }
 
     @SuppressWarnings("unchecked")
     public String checkMails() {
@@ -211,6 +257,16 @@ public class Account {
             }
         }
         return folderNames;
+    }
+    
+    public void setFolderNames(Vector<String> folderNames) {
+        this.folderNames = folderNames;
+        db.execSQL("delete from folders where account_id = ?",
+                new Object[]{ id });
+        for (String name : folderNames) {
+            db.execSQL("insert into folders (account_id, name) values (?, ?)",
+                    new Object[]{ id, name });
+        }
     }
     
     private void setStatus(String format, Object... args) {
