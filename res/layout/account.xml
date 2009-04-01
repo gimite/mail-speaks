@@ -9,10 +9,6 @@
         <EditText android:id="@+id/emailEdit" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
     </TableRow>
     <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
-        <TextView android:text="" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
-        <Button android:id="@+id/foldersButton" android:text="Choose folders" android:layout_height="wrap_content" android:layout_width="fill_parent" />
-    </TableRow>
-    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
         <TextView android:text="User ID" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
         <EditText android:id="@+id/userEdit" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
     </TableRow>
@@ -27,6 +23,13 @@
     <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
         <TextView android:text="IMAP Port" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
         <EditText android:id="@+id/portEdit" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_margin="8px"></EditText>
+    </TableRow>
+    <TableRow android:layout_height="wrap_content" android:layout_width="fill_parent">
+        <TextView android:text="Target folders" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+		<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_weight="1">
+            <TextView android:id="@+id/foldersView" android:text="INBOX" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="8px"></TextView>
+            <Button android:id="@+id/foldersButton" android:text="Choose folders" android:layout_height="wrap_content" android:layout_width="fill_parent" />
+        </LinearLayout>
     </TableRow>
 </TableLayout>
 </ScrollView>

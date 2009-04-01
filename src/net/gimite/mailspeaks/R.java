@@ -11,20 +11,21 @@ public final class R {
     public static final class attr {
     }
     public static final class drawable {
-        public static final int icon=0x7f020000;
+        public static final int alert_dialog_icon=0x7f020000;
+        public static final int icon=0x7f020001;
     }
     public static final class id {
         public static final int TableLayout01=0x7f050000;
         public static final int accountsView=0x7f05000a;
         public static final int emailEdit=0x7f050001;
-        public static final int foldersButton=0x7f050002;
-        public static final int foldersView=0x7f050007;
+        public static final int foldersButton=0x7f050007;
+        public static final int foldersView=0x7f050006;
         public static final int globalStatusLabel=0x7f050009;
-        public static final int hostEdit=0x7f050005;
+        public static final int hostEdit=0x7f050004;
         public static final int notifyBox=0x7f050008;
-        public static final int passwordEdit=0x7f050004;
-        public static final int portEdit=0x7f050006;
-        public static final int userEdit=0x7f050003;
+        public static final int passwordEdit=0x7f050003;
+        public static final int portEdit=0x7f050005;
+        public static final int userEdit=0x7f050002;
     }
     public static final class layout {
         public static final int account=0x7f030000;
