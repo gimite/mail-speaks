@@ -9,6 +9,7 @@ import java.util.Vector;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.AudioManager;
 import android.util.Log;
 
 import com.android.email.mail.internet.BinaryTempFileBody;
@@ -16,10 +17,12 @@ import com.google.tts.TTS;
 
 public class MailChecker {
     
+    private static String tempDirPath = "/data/data/net.gimite.mailspeaks/tmp";
+
     private TTS tts;
     private Context context;
     private SQLiteDatabase db;
-    private static String tempDirPath = "/sdcard/net/gimite/tmp";
+    private AudioManager audioManager;
     
     final int MAX_NOTIFICATIONS = 3;
     
@@ -28,6 +31,7 @@ public class MailChecker {
         BinaryTempFileBody.setTempDirectory(new File(tempDirPath));
         tts = new TTS(context, onTtsInit, true);
         initDatabase();
+        audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
     }
     
     private TTS.InitListener onTtsInit = new TTS.InitListener() {
@@ -50,7 +54,8 @@ public class MailChecker {
             }
             return success;
         } finally {
-            if (!speech.equals("")) {
+            if (!speech.equals("") &&
+                    audioManager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
                 tts.setLanguage("en-us");
                 tts.speak(speech, 1, null);
             }

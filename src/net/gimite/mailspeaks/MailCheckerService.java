@@ -61,7 +61,7 @@ public class MailCheckerService extends Service {
                     try{
                         for (int i = 0; i < 6; ++i) {
                             try {
-                                Thread.sleep(10 * 1000);
+                                if (i > 0) Thread.sleep(10 * 1000);
                                 mailChecker.setGlobalStatus(
                                         String.format("Attempt %d: Checking...", i + 1));
                                 log(wifiStatus());
@@ -100,6 +100,8 @@ public class MailCheckerService extends Service {
                 }
             });
             thread.start();
+        } else if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+            Log.i("MailChecker", "boot");
         } else {
             setTimer(0);
         }
@@ -134,9 +136,7 @@ public class MailCheckerService extends Service {
         if (info != null) {
             SupplicantState state = info.getSupplicantState();
             if (state == SupplicantState.DORMANT) {
-                log("reenable wifi");
-                wifiManager.setWifiEnabled(false);
-                wifiManager.setWifiEnabled(true);
+                reenableWifi();
                 return true;
             }
             return state != SupplicantState.DISCONNECTED &&
@@ -150,14 +150,31 @@ public class MailCheckerService extends Service {
         }
     }
     
+    private void reenableWifi() {
+        if (!wifiManager.isWifiEnabled()) return;
+        log("reenable wifi");
+        wifiManager.setWifiEnabled(false);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) { }
+        wifiManager.setWifiEnabled(true);
+    }
+    
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.i("MailCheckerService", "destroyed");
         alive = false;
+        alarmManager.cancel(checkMailPendingIntent);
+        if (thread != null && thread.isAlive()) {
+            thread.interrupt();
+            try {
+                thread.join();
+            } catch (InterruptedException e) { }
+        }
+        mailChecker.setGlobalStatus("Disabled.");
         tts.shutdown();
         mailChecker.destroy();
-        alarmManager.cancel(checkMailPendingIntent);
     }
 
     @Override
