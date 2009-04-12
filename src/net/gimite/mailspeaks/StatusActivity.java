@@ -8,6 +8,7 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -39,7 +40,8 @@ public class StatusActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.status);
         mailChecker = new MailChecker(this);
-
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        
         globalStatusLabel = (TextView)findViewById(R.id.globalStatusLabel);
         notifyBox = (CheckBox)findViewById(R.id.notifyBox);
         notifyBox.setOnCheckedChangeListener(onNotifyBoxClick);
