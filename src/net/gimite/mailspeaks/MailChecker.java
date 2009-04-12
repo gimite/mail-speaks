@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Vector;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
@@ -29,7 +30,6 @@ public class MailChecker {
     public MailChecker(Context context) {
         this.context = context;
         BinaryTempFileBody.setTempDirectory(new File(tempDirPath));
-        tts = new TTS(context, onTtsInit, true);
         initDatabase();
         audioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
     }
@@ -56,6 +56,7 @@ public class MailChecker {
         } finally {
             if (!speech.equals("") &&
                     audioManager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
+                if (tts == null) tts = new TTS(context, onTtsInit, true);
                 tts.setLanguage("en-us");
                 tts.speak(speech, 1, null);
             }
@@ -102,8 +103,39 @@ public class MailChecker {
         db.execSQL("update global set status = ?", new Object[]{ status });
     }
     
+    public boolean isEnabled() {
+        Cursor cursor = db.rawQuery("select * from global", new String[]{ });
+        try {
+            cursor.moveToFirst();
+            return Util.getBoolean(cursor, "enabled");
+        } finally {
+            cursor.close();
+        }
+    }
+    
+    public void setEnabled(boolean enabled) {
+        db.execSQL("update global set enabled = ?", new Object[]{ enabled ? 1 : 0 });
+        if (enabled) {
+            startService();
+        } else {
+            stopService();
+        }
+    }
+    
+    public void startService() {
+        Intent intent = new Intent();
+        intent.setClass(context, MailCheckerService.class);
+        context.startService(intent);
+    }
+    
+    public void stopService() {
+        Intent intent = new Intent();
+        intent.setClass(context, MailCheckerService.class);
+        context.stopService(intent);
+    }
+    
     public void destroy() {
-        tts.shutdown();
+        if (tts != null) tts.shutdown();
         db.close();
     }
     
@@ -113,7 +145,8 @@ public class MailChecker {
         try {
             db.execSQL(
                 "create table if not exists global (" +
-                "  status string" +
+                "  status string," +
+                "  enabled boolean" +
                 ")"
             );
             Cursor cursor = db.rawQuery("select * from global", new String[]{ });

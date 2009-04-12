@@ -43,6 +43,7 @@ public class StatusActivity extends Activity {
         globalStatusLabel = (TextView)findViewById(R.id.globalStatusLabel);
         notifyBox = (CheckBox)findViewById(R.id.notifyBox);
         notifyBox.setOnCheckedChangeListener(onNotifyBoxClick);
+        notifyBox.setChecked(mailChecker.isEnabled());
         accountsView = (ListView)findViewById(R.id.accountsView);
         accountsView.setOnItemClickListener(onAccountsViewClick);
         accountsAdapter = new SimpleAdapter(
@@ -74,27 +75,11 @@ public class StatusActivity extends Activity {
         mailChecker.destroy();
     }
 
-    private void startService() {
-        Intent intent = new Intent();
-        intent.setClass(this, MailCheckerService.class);
-        startService(intent);
-    }
-    
-    private void stopService() {
-        Intent intent = new Intent();
-        intent.setClass(this, MailCheckerService.class);
-        stopService(intent);
-    }
-    
     private OnCheckedChangeListener onNotifyBoxClick = new OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView,
                 boolean isChecked) {
-            if (isChecked) {
-                startService();
-            } else {
-                stopService();
-            }
+            mailChecker.setEnabled(isChecked);
         }
     };
     

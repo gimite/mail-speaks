@@ -17,6 +17,11 @@ public class Util {
         return cursor.getLong(idx);
     }
     
+    public static boolean getBoolean(Cursor cursor, String columnName) {
+        int idx = cursor.getColumnIndexOrThrow(columnName);
+        return cursor.getInt(idx) != 0;
+    }
+    
     public static String getString(Cursor cursor, String columnName) {
         int idx = cursor.getColumnIndexOrThrow(columnName);
         return cursor.getString(idx);
