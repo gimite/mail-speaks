@@ -61,6 +61,8 @@ public class MailCheckerService extends Service {
                 public void run() {
                     log("thread started");
                     try{
+                        boolean succeeded = false;
+                        boolean interrupted = false;
                         for (int i = 0; i < MAX_SHORT_RETRIES; ++i) {
                             try {
                                 if (i > 0) Thread.sleep(10 * 1000);
@@ -69,6 +71,7 @@ public class MailCheckerService extends Service {
                                 log(wifiStatus());
                                 if (mailChecker.checkMails()) {
                                     mailChecker.setGlobalStatus("Last check succeeded.");
+                                    succeeded = true;
                                     break;
                                 } else {
                                     mailChecker.setGlobalStatus(
@@ -76,6 +79,7 @@ public class MailCheckerService extends Service {
                                 }
                             } catch (InterruptedException e) {
                                 log("interrupted exception");
+                                interrupted = true;
                                 break;
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -88,6 +92,7 @@ public class MailCheckerService extends Service {
                             }
                             if (Thread.interrupted()) {
                                 log("interrupted");
+                                interrupted = true;
                                 break;
                             }
                             if (!tweakWifi()) {
@@ -95,6 +100,9 @@ public class MailCheckerService extends Service {
                                         "Giving up. Network is not available.");
                                 break;
                             }
+                        }
+                        if (!succeeded && !interrupted) {
+                            maybeReenableWifi();
                         }
                     } finally {
                         plock.release();
@@ -135,28 +143,27 @@ public class MailCheckerService extends Service {
                 reenableWifi();
                 return true;
             }
-            if (state != SupplicantState.DISCONNECTED &&
-                    state != SupplicantState.DORMANT &&
-                    state != SupplicantState.INACTIVE &&
-                    state != SupplicantState.INVALID &&
-                    state != SupplicantState.SCANNING &&
-                    state != SupplicantState.UNINITIALIZED) {
-                return true;
-            }
-            int count = mailChecker.getFailureCount() + 1;
-            if (count >= LONG_RETRY_FREQUENCY) {
-                Log.i("MailChecker", "force wifi retry");
-                reenableWifi();
-                mailChecker.setFailureCount(0);
-                return true;
-            } else {
-                Log.i("MailChecker", "skip wifi retry");
-                mailChecker.setFailureCount(count);
-                return false;
-            }
+            return state != SupplicantState.DISCONNECTED &&
+                state != SupplicantState.DORMANT &&
+                state != SupplicantState.INACTIVE &&
+                state != SupplicantState.INVALID &&
+                state != SupplicantState.SCANNING &&
+                state != SupplicantState.UNINITIALIZED;
         } else {
             return false;
         }
+    }
+    
+    private void maybeReenableWifi() {
+        int count = mailChecker.getFailureCount() + 1;
+        if (count >= LONG_RETRY_FREQUENCY) {
+            Log.i("MailChecker", "force wifi retry");
+            count = 0;
+            reenableWifi();
+        } else {
+            Log.i("MailChecker", "skip wifi retry");
+        }
+        mailChecker.setFailureCount(count);
     }
     
     private void reenableWifi() {

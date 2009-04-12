@@ -79,7 +79,7 @@ public class Account {
         for (Account account : getAll(db)) {
             HashMap<String, String> entry = new HashMap<String, String>();
             entry.put("email", account.email());
-            entry.put("status", account.getStatus());
+            entry.put("status", account.getFullStatus());
             data.add(entry);
         }
     }
@@ -290,7 +290,10 @@ public class Account {
                 new Object[]{ status, id });
     }
     
-    public String getStatus() {
+    public String getFullStatus() {
+        if (lastResult == null) {
+            return "Never checked.";
+        }
         String timeStatus = "";
         if (lastSuccessAt.equals(lastCheckAt)) {
             timeStatus = String.format(
