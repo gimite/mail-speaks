@@ -18,6 +18,10 @@ import android.util.Log;
 
 public class MailCheckerService extends Service {
 
+    private static final String ACTION_CHECK_MAIL = "net.gimite.mailspeaks.action.CHECK_MAIL";
+    private static final int LONG_RETRY_FREQUENCY = 6;
+    private static final int MAX_SHORT_RETRIES = 6;
+
     boolean alive = true;
     private AlarmManager alarmManager;
     private PowerManager powerManager;
@@ -27,8 +31,6 @@ public class MailCheckerService extends Service {
     private PendingIntent checkMailPendingIntent;
     private PowerManager.WakeLock plock;
     private Thread thread;
-    
-    private final String ACTION_CHECK_MAIL = "net.gimite.mailspeaks.action.CHECK_MAIL";
     private WifiLock wifiLock;
     
     @Override
@@ -59,7 +61,7 @@ public class MailCheckerService extends Service {
                 public void run() {
                     log("thread started");
                     try{
-                        for (int i = 0; i < 6; ++i) {
+                        for (int i = 0; i < MAX_SHORT_RETRIES; ++i) {
                             try {
                                 if (i > 0) Thread.sleep(10 * 1000);
                                 mailChecker.setGlobalStatus(
@@ -88,7 +90,7 @@ public class MailCheckerService extends Service {
                                 log("interrupted");
                                 break;
                             }
-                            if (!inWifiArea()) {
+                            if (!tweakWifi()) {
                                 mailChecker.setGlobalStatus(
                                         "Giving up. Network is not available.");
                                 break;
@@ -109,13 +111,6 @@ public class MailCheckerService extends Service {
     
     private void log(String str) {
         Log.i("MailCheckerService", str);
-//        try {
-//            FileWriter writer = new FileWriter("/sdcard/debug.log", true);
-//            writer.write(new Date().toString() + ": " + str + "\n");
-//            writer.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
     
     private String wifiStatus() {
@@ -131,7 +126,8 @@ public class MailCheckerService extends Service {
         return result;
     }
     
-    private boolean inWifiArea() {
+    // Returns true if it worth retrying.
+    private boolean tweakWifi() {
         WifiInfo info = wifiManager.getConnectionInfo();
         if (info != null) {
             SupplicantState state = info.getSupplicantState();
@@ -139,12 +135,25 @@ public class MailCheckerService extends Service {
                 reenableWifi();
                 return true;
             }
-            return state != SupplicantState.DISCONNECTED &&
-                state != SupplicantState.DORMANT &&
-                state != SupplicantState.INACTIVE &&
-                state != SupplicantState.INVALID &&
-                state != SupplicantState.SCANNING &&
-                state != SupplicantState.UNINITIALIZED;
+            if (state != SupplicantState.DISCONNECTED &&
+                    state != SupplicantState.DORMANT &&
+                    state != SupplicantState.INACTIVE &&
+                    state != SupplicantState.INVALID &&
+                    state != SupplicantState.SCANNING &&
+                    state != SupplicantState.UNINITIALIZED) {
+                return true;
+            }
+            int count = mailChecker.getFailureCount() + 1;
+            if (count >= LONG_RETRY_FREQUENCY) {
+                Log.i("MailChecker", "force wifi retry");
+                reenableWifi();
+                mailChecker.setFailureCount(0);
+                return true;
+            } else {
+                Log.i("MailChecker", "skip wifi retry");
+                mailChecker.setFailureCount(count);
+                return false;
+            }
         } else {
             return false;
         }

@@ -89,9 +89,8 @@ public class MailChecker {
     }
     
     public String getGlobalStatus() {
-        Cursor cursor = db.rawQuery("select * from global", new String[]{ });
+        Cursor cursor = getGlobalCursor();
         try {
-            cursor.moveToFirst();
             return Util.getString(cursor, "status");
         } finally {
             cursor.close();
@@ -104,9 +103,8 @@ public class MailChecker {
     }
     
     public boolean isEnabled() {
-        Cursor cursor = db.rawQuery("select * from global", new String[]{ });
+        Cursor cursor = getGlobalCursor();
         try {
-            cursor.moveToFirst();
             return Util.getBoolean(cursor, "enabled");
         } finally {
             cursor.close();
@@ -134,6 +132,30 @@ public class MailChecker {
         context.stopService(intent);
     }
     
+    public int getFailureCount() {
+        Cursor cursor = getGlobalCursor();
+        try {
+            return Util.getInt(cursor, "failure_count");
+        } finally {
+            cursor.close();
+        }
+    }
+    
+    public void setFailureCount(int count) {
+        db.execSQL("update global set failure_count = ?", new Object[]{ count });
+    }
+    
+    private Cursor getGlobalCursor() {
+        Cursor cursor = db.rawQuery("select * from global", new String[]{ });
+        try {
+            cursor.moveToFirst();
+            return cursor;
+        } catch (RuntimeException ex) {
+            cursor.close();
+            throw ex;
+        }
+    }
+    
     public void destroy() {
         if (tts != null) tts.shutdown();
         db.close();
@@ -146,7 +168,8 @@ public class MailChecker {
             db.execSQL(
                 "create table if not exists global (" +
                 "  status string," +
-                "  enabled boolean" +
+                "  enabled boolean," +
+                "  failure_count integer" +
                 ")"
             );
             Cursor cursor = db.rawQuery("select * from global", new String[]{ });
